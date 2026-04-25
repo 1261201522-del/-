@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>早上好，冉冉姐</title>
+<style>
+body, html {
+  margin:0;
+  padding:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  font-family:"微软雅黑", sans-serif;
+  background: radial-gradient(circle, #ffffff 20%, #ffc0cb 100%);
+  position: relative;
+}
+
+/* 闪光文字 */
+#text {
+  position:absolute;
+  top:30%;
+  width:100%;
+  text-align:center;
+  font-size:5vw;
+  font-weight:bold;
+  color:#ffd700;
+  text-shadow:
+    0 0 5px #fff,
+    0 0 10px #fff,
+    0 0 20px #ff0,
+    0 0 30px #ff0;
+  animation: glow 2s infinite alternate, breathe 2s infinite alternate;
+  z-index: 3;
+}
+
+@keyframes glow {
+  0% { text-shadow: 0 0 5px #fff,0 0 10px #fff,0 0 20px #ff0,0 0 30px #ff0; }
+  50% { text-shadow: 0 0 10px #fff,0 0 20px #ff0,0 0 30px #ff0,0 0 50px #ff0; }
+  100% { text-shadow: 0 0 15px #fff,0 0 30px #ff0,0 0 40px #ff0,0 0 60px #ff0; }
+}
+
+@keyframes breathe {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* 弹跳图片 */
+.bounce-img {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  z-index: 2;
+}
+
+/* 烟花Canvas */
+#fireworks {
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  z-index:1;
+  pointer-events:none;
+}
+</style>
+</head>
+<body>
+
+<div id="text">早上好，美丽的冉冉姐</div>
+<canvas id="fireworks"></canvas>
+
+<script>
+// -------- 弹跳图片 --------
+const imgSrc = 'background.jpg';
+const imgCount = 8;
+const images = [];
+
+for(let i=0;i<imgCount;i++){
+  const img = document.createElement('img');
+  img.src = imgSrc;
+  img.className = 'bounce-img';
+  document.body.appendChild(img);
+
+  const x = Math.random() * (window.innerWidth - 200);
+  const y = Math.random() * (window.innerHeight - 200);
+  img.style.left = x + 'px';
+  img.style.top = y + 'px';
+
+  const speedX = (Math.random()*4 + 1) * (Math.random() < 0.5 ? 1 : -1);
+  const speedY = (Math.random()*4 + 1) * (Math.random() < 0.5 ? 1 : -1);
+
+  images.push({el: img, x, y, speedX, speedY});
+}
+
+function animateImages(){
+  images.forEach(obj => {
+    obj.x += obj.speedX;
+    obj.y += obj.speedY;
+    if(obj.x <=0 || obj.x >= window.innerWidth - 200) obj.speedX *= -1;
+    if(obj.y <=0 || obj.y >= window.innerHeight - 200) obj.speedY *= -1;
+    obj.el.style.left = obj.x + 'px';
+    obj.el.style.top = obj.y + 'px';
+  });
+  requestAnimationFrame(animateImages);
+}
+animateImages();
+
+// -------- 烟花效果 --------
+const canvas = document.getElementById('fireworks');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const particles = [];
+
+function createFirework() {
+  const x = Math.random()*canvas.width;
+  const y = Math.random()*canvas.height/2;
+  const count = Math.floor(Math.random()*20+30);
+  for(let i=0;i<count;i++){
+    const angle = Math.random()*Math.PI*2;
+    const speed = Math.random()*5+2;
+    const vx = Math.cos(angle)*speed;
+    const vy = Math.sin(angle)*speed;
+    const color = `hsl(${Math.random()*360},100%,70%)`;
+    particles.push({x,y,vx,vy,color,life:100});
+  }
+}
+
+function animateFireworks(){
+  // 关键：不覆盖背景，只绘制半透明粒子
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  for(let i=particles.length-1;i>=0;i--){
+    const p = particles[i];
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,2,0,Math.PI*2);
+    ctx.fill();
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.05; // 重力
+    p.life--;
+    if(p.life <=0){
+      particles.splice(i,1);
+    }
+  }
+
+  if(Math.random()<0.05) createFirework();
+
+  requestAnimationFrame(animateFireworks);
+}
+animateFireworks();
+
+window.addEventListener('resize', ()=>{
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+});
+</script>
+
+</body>
+</html>
